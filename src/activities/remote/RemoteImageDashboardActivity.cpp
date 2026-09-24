@@ -181,11 +181,6 @@ void RemoteImageDashboardActivity::beginUpdate() {
 }
 
 void RemoteImageDashboardActivity::startDirectWifiConnect() {
-  {
-    RenderLock lock(*this);
-    WIFI_STORE.loadFromFile();
-  }
-
   const std::string lastSsid = WIFI_STORE.getLastConnectedSsid();
   // 1.6's store returns an optional rather than a borrowed pointer.
   std::optional<WifiCredential> cred;
