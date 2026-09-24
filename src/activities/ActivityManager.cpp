@@ -27,6 +27,8 @@
 #include "home/RecentBookProgress.h"
 #include "home/RecentBooksActivity.h"
 #include "home/RecentBooksGridActivity.h"
+#include "lockscreens/LockScreensActivity.h"
+#include "remote/RemoteImageDashboardActivity.h"
 #include "network/CrossPointWebServerActivity.h"
 #include "network/NearbyBookTransferActivity.h"
 #include "network/NearbyStatsSyncActivity.h"
@@ -572,6 +574,21 @@ void ActivityManager::replaceActivity(std::unique_ptr<Activity>&& newActivity) {
     currentActivity = std::move(newActivity);
     currentActivity->onEnter();
   }
+}
+
+void ActivityManager::goToLockScreenCard(const uint8_t slot) {
+  pushActivity(std::make_unique<RemoteImageDashboardActivity>(renderer, mappedInput, slot));
+}
+
+// The sleep-screen card runs unattended: it fetches, paints, then arms its own
+// timed deep sleep rather than handing back to the sleep activity.
+void ActivityManager::goToLockScreenDashboard() {
+  replaceActivity(std::make_unique<RemoteImageDashboardActivity>(renderer, mappedInput, SETTINGS.sleepLockScreenCard,
+                                                                 /*autoRefresh=*/true));
+}
+
+void ActivityManager::goToLockScreens() {
+  replaceActivity(std::make_unique<LockScreensActivity>(renderer, mappedInput));
 }
 
 void ActivityManager::goToFileTransfer(std::string returnBookPath) {

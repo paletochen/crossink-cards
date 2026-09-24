@@ -33,6 +33,14 @@ class CrossPointState : public PersistableStore<CrossPointState> {
   uint8_t recentBootFill = 0;                         // valid entries (0..BOOT_RECENT_COUNT)
   uint8_t readerActivityLoadCount = 0;
   bool lastSleepFromReader = false;
+  // Which lock-screen card, if any, the device is currently cycling through
+  // its timed sleep. Cards occupy DASHBOARD_CARD_BASE + slot index, so adding
+  // a slot needs no new mode value.
+  enum : uint8_t {
+    DASHBOARD_NONE = 0,
+    DASHBOARD_CARD_BASE = 1,
+  };
+  uint8_t activeDashboardMode = DASHBOARD_NONE;
   bool showBootScreen = true;
   // One-shot marker set when a Quick Lock timeout puts the device to sleep.
   // The next boot uses it only to discard Quick Lock's temporary frontlight state.

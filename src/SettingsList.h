@@ -336,7 +336,7 @@ inline SettingInfo buildSleepScreenSetting() {
       StrId::STR_SLEEP_SCREEN, &CrossPointSettings::sleepScreen,
       {StrId::STR_NONE_OPT, StrId::STR_DARK, StrId::STR_LIGHT, StrId::STR_CUSTOM, StrId::STR_COVER,
        StrId::STR_COVER_CUSTOM, StrId::STR_PAGE_OVERLAY, StrId::STR_READING_STATS, StrId::STR_THEME_MINIMAL,
-       StrId::STR_THEME_MINIMAL_STATS, StrId::STR_THEME_DASHBOARD, StrId::STR_QUICK_RESUME},
+       StrId::STR_THEME_MINIMAL_STATS, StrId::STR_THEME_DASHBOARD, StrId::STR_LOCK_SCREEN, StrId::STR_QUICK_RESUME},
       "sleepScreen", StrId::STR_CAT_DISPLAY);
   s.withEnumRawValues({
       static_cast<uint8_t>(CrossPointSettings::BLANK),
@@ -350,6 +350,7 @@ inline SettingInfo buildSleepScreenSetting() {
       static_cast<uint8_t>(CrossPointSettings::MINIMAL_SLEEP),
       static_cast<uint8_t>(CrossPointSettings::MINIMAL_STATS_SLEEP),
       static_cast<uint8_t>(CrossPointSettings::DASHBOARD_SLEEP),
+      static_cast<uint8_t>(CrossPointSettings::LOCK_SCREEN),
       static_cast<uint8_t>(CrossPointSettings::QUICK_RESUME),
   });
   return s;
@@ -567,6 +568,11 @@ inline const std::vector<SettingInfo>& getBaseSettingsList() {
 
     // --- Display ---
     add(buildSleepScreenSetting());
+    // Which card the LOCK_SCREEN sleep mode shows.
+    add(SettingInfo::Enum(StrId::STR_LOCK_SCREEN_TYPE, &CrossPointSettings::sleepLockScreenCard,
+                          {StrId::STR_LOCK_SCREEN_CARD_1, StrId::STR_LOCK_SCREEN_CARD_2, StrId::STR_LOCK_SCREEN_CARD_3,
+                           StrId::STR_LOCK_SCREEN_CARD_4, StrId::STR_LOCK_SCREEN_CARD_5, StrId::STR_LOCK_SCREEN_CARD_6},
+                          "sleepLockScreenCard", StrId::STR_CAT_DISPLAY));
     add(SettingInfo::Enum(StrId::STR_SLEEP_COVER_MODE, &CrossPointSettings::sleepScreenCoverMode,
                           {StrId::STR_FIT, StrId::STR_CROP}, "sleepScreenCoverMode", StrId::STR_CAT_DISPLAY));
     add(SettingInfo::Enum(StrId::STR_SLEEP_COVER_FILTER, &CrossPointSettings::sleepScreenCoverFilter,
@@ -954,7 +960,37 @@ inline const std::vector<SettingInfo>& getBaseSettingsList() {
           removeEnumRawValue(setting, static_cast<uint8_t>(CrossPointSettings::LONG_MENU_TOGGLE_TILT_PAGE_TURN));
         }
       }
-    }
+    // --- Lock-screen cards ---
+    add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_1, &CrossPointSettings::lockScreenCard1RefreshMinutes,
+                           {1, 240, 1}, "lockScreenCard1RefreshMinutes", StrId::STR_CAT_SYSTEM));
+    add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_2, &CrossPointSettings::lockScreenCard2RefreshMinutes,
+                           {1, 240, 1}, "lockScreenCard2RefreshMinutes", StrId::STR_CAT_SYSTEM));
+    add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_3, &CrossPointSettings::lockScreenCard3RefreshMinutes,
+                           {1, 240, 1}, "lockScreenCard3RefreshMinutes", StrId::STR_CAT_SYSTEM));
+    add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_4, &CrossPointSettings::lockScreenCard4RefreshMinutes,
+                           {1, 240, 1}, "lockScreenCard4RefreshMinutes", StrId::STR_CAT_SYSTEM));
+    add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_5, &CrossPointSettings::lockScreenCard5RefreshMinutes,
+                           {1, 240, 1}, "lockScreenCard5RefreshMinutes", StrId::STR_CAT_SYSTEM));
+    add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_6, &CrossPointSettings::lockScreenCard6RefreshMinutes,
+                           {1, 240, 1}, "lockScreenCard6RefreshMinutes", StrId::STR_CAT_SYSTEM));
+    add(SettingInfo::String(StrId::STR_LOCK_SCREEN_CARD_1, SETTINGS.lockScreenCardUrl[0],
+                            CrossPointSettings::LOCK_SCREEN_CARD_URL_LEN, "lockScreenCard1Url",
+                            StrId::STR_LOCK_SCREENS));
+    add(SettingInfo::String(StrId::STR_LOCK_SCREEN_CARD_2, SETTINGS.lockScreenCardUrl[1],
+                            CrossPointSettings::LOCK_SCREEN_CARD_URL_LEN, "lockScreenCard2Url",
+                            StrId::STR_LOCK_SCREENS));
+    add(SettingInfo::String(StrId::STR_LOCK_SCREEN_CARD_3, SETTINGS.lockScreenCardUrl[2],
+                            CrossPointSettings::LOCK_SCREEN_CARD_URL_LEN, "lockScreenCard3Url",
+                            StrId::STR_LOCK_SCREENS));
+    add(SettingInfo::String(StrId::STR_LOCK_SCREEN_CARD_4, SETTINGS.lockScreenCardUrl[3],
+                            CrossPointSettings::LOCK_SCREEN_CARD_URL_LEN, "lockScreenCard4Url",
+                            StrId::STR_LOCK_SCREENS));
+    add(SettingInfo::String(StrId::STR_LOCK_SCREEN_CARD_5, SETTINGS.lockScreenCardUrl[4],
+                            CrossPointSettings::LOCK_SCREEN_CARD_URL_LEN, "lockScreenCard5Url",
+                            StrId::STR_LOCK_SCREENS));
+    add(SettingInfo::String(StrId::STR_LOCK_SCREEN_CARD_6, SETTINGS.lockScreenCardUrl[5],
+                            CrossPointSettings::LOCK_SCREEN_CARD_URL_LEN, "lockScreenCard6Url",
+                            StrId::STR_LOCK_SCREENS));
 
     if (!gpio.deviceIsX3()) {
       auto sleepScreenIt =

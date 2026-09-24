@@ -590,3 +590,15 @@ HttpDownloader::DownloadError HttpDownloader::downloadToFile(const std::string& 
 
   return OK;
 }
+
+HttpDownloader::DownloadError HttpDownloader::downloadToFile(const std::string& url, const std::string& destPath,
+                                                             const DownloadOptions& options, ProgressCallback progress,
+                                                             const std::string& username, const std::string& password,
+                                                             bool downgradeRedirectsToHttp) {
+  DownloadOptions opt = options;
+  if (opt.cancelRequested && !opt.shouldCancel) {
+    opt.shouldCancel = opt.cancelRequested;
+  }
+  return downloadToFile(url, destPath, std::move(progress), nullptr, username, password, opt);
+}
+

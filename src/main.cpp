@@ -25,6 +25,11 @@
 #include <uzlib.h>
 
 #include "AppCapabilities.h"
+#include "DashboardSleep.h"
+
+#ifndef SIMULATOR
+#include <esp_sleep.h>
+#endif
 
 #ifdef SIMULATOR
 using esp_reset_reason_t = int;
@@ -1056,9 +1061,54 @@ void mirrorWakeShortPressToNvs() {
 #endif
 }
 
+// The card frame stays on the panel; the RTC timer wakes us for the next
+// refresh, the power button wakes us to leave the mode. Never switches
+// activity (the current frame IS the sleep screen), so it is safe to call from
+// inside an activity's loop().
+void enterDashboardSleep(uint32_t seconds) {
+  HalPowerManager::Lock powerLock;
+  deepSleepInProgress = true;
+  APP_STATE.saveToFile();
+
+  if (WiFi.getMode() != WIFI_MODE_NULL) {
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
+  }
+
+  halTiltSensor.deepSleep();
+  display.deepSleep();
+  Storage.prepareForDeepSleep();
+  LOG_DBG("MAIN", "Entering timed deep sleep (%u s)", (unsigned)seconds);
+
+  powerManager.startTimedDeepSleep(gpio, seconds);
+  abort();  // unreachable: startTimedDeepSleep does not return
+}
+
+// "Sleep Screen = Card": instead of drawing a static sleep image and powering
+// off, hand off to the configured card in unattended mode. It connects,
+// fetches, renders, then arms its own timed deep sleep, so this MUST NOT sleep
+// or tear down WiFi itself. Returns false when the mode is not selected, so
+// the caller falls through to the normal sleep path.
+bool enterLockScreenSleep() {
+  if (SETTINGS.sleepScreen != CrossPointSettings::SLEEP_SCREEN_MODE::LOCK_SCREEN) return false;
+  // Auto-sleep fires after the idle loop has dropped the CPU to its low-power
+  // frequency, and the card's first act is to bring up WiFi. The radio cannot
+  // initialise at that clock -- WiFi.mode() then blocks forever, wedging the
+  // loop task with no crash. Restore full speed before handing off.
+  powerManager.setPowerSaving(false);
+  APP_STATE.lastSleepFromReader = activityManager.isReaderActivity();
+  APP_STATE.showBootScreen = true;  // a real wake out of the mode shows the splash
+  APP_STATE.saveToFile();
+  activityManager.goToLockScreenDashboard();
+  return true;
+}
+
 // Enter deep sleep mode
 void enterDeepSleep(bool fromTimeout) {
   HalPowerManager::Lock powerLock;  // Ensure we are at normal CPU frequency for sleep preparation
+  // A card sleep screen replaces sleeping altogether: the card activity arms
+  // its own timed wake, so return before any of the teardown below runs.
+  if (enterLockScreenSleep()) return;
   APP_STATE.lastSleepFromReader = activityManager.isReaderActivity();
 
   const bool isQuickResumeSleep =
@@ -1385,9 +1435,23 @@ void setup() {
                           FsHelpers::hasBmpExtension(APP_STATE.favoriteBootImagePath) &&
                           Storage.exists(APP_STATE.favoriteBootImagePath.c_str());
   }
+  uint8_t dashboardResume = CrossPointState::DASHBOARD_NONE;
+  if (APP_STATE.activeDashboardMode != CrossPointState::DASHBOARD_NONE) {
+    if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER) {
+      LOG_INF("MAIN", "Timer wake: refreshing card %u", APP_STATE.activeDashboardMode);
+      dashboardResume = APP_STATE.activeDashboardMode;
+    } else {
+      LOG_INF("MAIN", "Non-timer wake: leaving card mode");
+      APP_STATE.activeDashboardMode = CrossPointState::DASHBOARD_NONE;
+      APP_STATE.saveToFile();
+    }
+  }
+  const bool dashboardResumeActive = dashboardResume != CrossPointState::DASHBOARD_NONE;
+
   const bool skipSplashOnWake =
       isSleepWake && !APP_STATE.showBootScreen && !hasBootScreenDirectory && !hasPinnedBootScreen;
-  const BootResume resume = isNetworkResume    ? BootResume::Network
+  const BootResume resume = dashboardResumeActive ? BootResume::Silent
+                            : isNetworkResume    ? BootResume::Network
                             : isSilentReboot   ? BootResume::Silent
                             : skipSplashOnWake ? BootResume::SplashlessWake
                                                : BootResume::Splash;
@@ -1470,6 +1534,8 @@ void setup() {
   } else if (rebootedFromPanic) {
     // If we rebooted from a panic, go to crash report screen to show the panic info
     activityManager.goToCrashReport();
+  } else if (dashboardResumeActive) {
+    activityManager.goToLockScreenDashboard();
   } else if (resume == BootResume::Network) {
     bool launched = false;
     switch (static_cast<NetworkBootTarget>(snapshotTarget)) {

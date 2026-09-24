@@ -25,6 +25,7 @@ class HttpDownloader {
     HTTP_ERROR,
     FILE_ERROR,
     ABORTED,
+    TIMED_OUT,
   };
 
   enum class Transport {
@@ -33,7 +34,8 @@ class HttpDownloader {
   };
 
   struct DownloadOptions {
-    explicit DownloadOptions(bool preservePartial = false, bool resumePartial = false,
+    DownloadOptions() = default;
+    explicit DownloadOptions(bool preservePartial, bool resumePartial = false,
                              CancelCallback shouldCancel = nullptr, size_t bufferSize = 0,
                              Transport transport = Transport::ESP_HTTP)
         : preservePartial(preservePartial),
@@ -42,14 +44,22 @@ class HttpDownloader {
           bufferSize(bufferSize),
           transport(transport) {}
 
-    bool preservePartial;
-    bool resumePartial;
-    CancelCallback shouldCancel;
-    size_t bufferSize;
-    Transport transport;
+    bool preservePartial = false;
+    bool resumePartial = false;
+    CancelCallback shouldCancel = nullptr;
+    size_t bufferSize = 0;
+    Transport transport = Transport::ESP_HTTP;
     // Borrowed only for this synchronous request. Basic credentials are sent
     // only to this origin; empty keeps the request URL as the credential origin.
     std::string_view authorizationOrigin;
+
+    uint32_t operationTimeoutMs = 60000;
+    uint32_t overallTimeoutMs = 0;
+    bool bypassCache = false;
+    CancelCallback cancelRequested = nullptr;
+    int* outHttpStatus = nullptr;
+    size_t* outBytesReceived = nullptr;
+    size_t* outExpectedBytes = nullptr;
   };
 
   /**
@@ -81,4 +91,9 @@ class HttpDownloader {
                                       ProgressCallback progress = nullptr, bool* cancelFlag = nullptr,
                                       const std::string& username = "", const std::string& password = "",
                                       DownloadOptions options = DownloadOptions());
+
+  static DownloadError downloadToFile(const std::string& url, const std::string& destPath,
+                                      const DownloadOptions& options, ProgressCallback progress = nullptr,
+                                      const std::string& username = "", const std::string& password = "",
+                                      bool downgradeRedirectsToHttp = false);
 };
