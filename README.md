@@ -186,9 +186,12 @@ Precompiled binaries are built automatically on every commit and release in GitH
 This project uses [PlatformIO](https://platformio.org) with the `pioarduino` core:
 
 ```bash
-# Clone repository with submodules
+# Clone repository with submodules (using standard files ref format for ESP-IDF CMake compatibility)
 git clone --recursive https://github.com/paletochen/crossink-cards.git
 cd crossink-cards
+
+# If your git defaults to reftables (e.g. gLinux/Google machines), migrate refs to files:
+# git refs migrate --ref-format=files
 
 # Build default firmware (Xteink X3 / X4)
 pio run -e default
