@@ -2,6 +2,8 @@ name: Build & Release Firmware
 
 on:
   push:
+    branches:
+      - '**'
     tags:
       - 'v*'
   workflow_dispatch:
@@ -62,7 +64,19 @@ jobs:
           set -euo pipefail
           pio run -e default | tee pio.log
 
+      - name: Upload firmware artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-build-${{ github.sha }}
+          path: |
+            .pio/build/default/crossink-cards_firmware.bin
+            .pio/build/default/crossink-cards_v1.6.0_firmware.bin
+            .pio/build/default/firmware.bin
+            .pio/build/default/firmware-x3-x4.bin
+          if-no-files-found: error
+
       - name: Determine Release Tag
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
         id: get_tag
         shell: bash
         run: |
@@ -73,6 +87,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.get_tag.outputs.tag }}
