@@ -59,22 +59,6 @@ jobs:
           uv pip install --python ~/.platformio/penv/bin/python "pioarduino==6.1.19"
           ~/.platformio/penv/bin/pio --version
 
-      - name: Build default firmware
-        run: |
-          set -euo pipefail
-          pio run -e default | tee pio.log
-
-      - name: Upload firmware artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: firmware-build-${{ github.sha }}
-          path: |
-            .pio/build/default/crossink-cards_firmware.bin
-            .pio/build/default/crossink-cards_v1.6.0_firmware.bin
-            .pio/build/default/firmware.bin
-            .pio/build/default/firmware-x3-x4.bin
-          if-no-files-found: error
-
       - name: Determine Release Tag & Version
         id: get_tag
         shell: bash
@@ -88,7 +72,27 @@ jobs:
             TAG="v1.6.0.${TIMESTAMP}"
           fi
           echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          VERSION="${TAG#v}"
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "Release tag: ${TAG}"
+          echo "Release version: ${VERSION}"
+
+      - name: Build default firmware
+        run: |
+          set -euo pipefail
+          CROSSINK_RELEASE_VERSION="${{ steps.get_tag.outputs.version }}" pio run -e default | tee pio.log
+
+      - name: Upload firmware artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-build-${{ github.sha }}
+          path: |
+            .pio/build/default/crossink-cards_firmware.bin
+            .pio/build/default/crossink-cards_v${{ steps.get_tag.outputs.version }}_firmware.bin
+            .pio/build/default/crossink-cards_v1.6.0_firmware.bin
+            .pio/build/default/firmware.bin
+            .pio/build/default/firmware-x3-x4.bin
+          if-no-files-found: warn
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -97,9 +101,11 @@ jobs:
           name: Release ${{ steps.get_tag.outputs.tag }}
           files: |
             .pio/build/default/crossink-cards_firmware.bin
+            .pio/build/default/crossink-cards_v${{ steps.get_tag.outputs.version }}_firmware.bin
             .pio/build/default/crossink-cards_v1.6.0_firmware.bin
             .pio/build/default/firmware.bin
             .pio/build/default/firmware-x3-x4.bin
+            .pio/build/default/firmware-x3-x4-v${{ steps.get_tag.outputs.version }}.bin
           draft: false
           prerelease: false
           make_latest: true

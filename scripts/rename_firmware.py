@@ -152,6 +152,8 @@ def rename_firmware(source, target, env):
     if release_version:
         release_dst = os.path.join(build_dir, f'firmware-{device_type}-{release_version}.bin')
         _copy_artifact(src, release_dst)
+        crossink_cards_rel_dst = os.path.join(build_dir, f'crossink-cards_{release_version}_firmware.bin')
+        _copy_artifact(src, crossink_cards_rel_dst)
 
 
 try:
