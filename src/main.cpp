@@ -26,6 +26,7 @@
 
 #include "AppCapabilities.h"
 #include "DashboardSleep.h"
+#include <WiFi.h>
 
 #ifndef SIMULATOR
 #include <esp_sleep.h>
@@ -1077,7 +1078,7 @@ void enterDashboardSleep(uint32_t seconds) {
 
   halTiltSensor.deepSleep();
   display.deepSleep();
-  Storage.prepareForDeepSleep();
+  Storage.shutdown();
   LOG_DBG("MAIN", "Entering timed deep sleep (%u s)", (unsigned)seconds);
 
   powerManager.startTimedDeepSleep(gpio, seconds);
