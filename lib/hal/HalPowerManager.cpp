@@ -11,7 +11,16 @@
 
 #include "HalGPIO.h"
 
+#if FREEINK_DEVICE_PAPERMONO
+#include <M5Pm1.h>
+#endif
+
 HalPowerManager powerManager;  // Singleton instance
+
+// GPIO13 controls the battery latch on both Xteink C3 boards (X3 and X4).
+// In normal deep sleep, it is driven LOW to cut battery power.
+// In timed deep sleep, it MUST be driven HIGH and held so the MCU stays powered.
+static constexpr gpio_num_t XTEINK_C3_GPIO13 = GPIO_NUM_13;
 
 namespace {
 void disableWiFiBeforeDeepSleep() {
@@ -229,10 +238,23 @@ void HalPowerManager::startTimedDeepSleep(HalGPIO& gpio, const uint64_t seconds)
   logSerial.end();
 #endif
 
-  // Hold every configured power latch HIGH through deep sleep -- GPIO13 on the
-  // C3 Xteink boards included. This differs from startDeepSleep(), which drives
-  // that pin LOW to cut battery power: a timed wake needs the MCU to stay
-  // powered so the RTC can fire on battery.
+  // Cut gated peripheral rails (touch/SD/EPD) and hold enables off through deep sleep.
+  freeink::PowerManager::powerDownRailsForSleep();
+
+  // Hold every configured power latch HIGH through deep sleep.
+  // On Xteink ESP32-C3 boards (X3 and X4), GPIO13 gates the battery MOSFET rail.
+  // PowerManager::powerDownRailsForSleep() above cuts peripheral rails (and may drop
+  // sd.powerEnable=GPIO13 on X3). We MUST explicitly assert GPIO13 HIGH and hold it
+  // so the MCU stays energized by the battery and the internal RTC timer can wake the SoC!
+#if !SOC_PM_SUPPORT_EXT1_WAKEUP
+  if (gpio.isXteinkDevice()) {
+    gpio_hold_dis(XTEINK_C3_GPIO13);
+    gpio_set_direction(XTEINK_C3_GPIO13, GPIO_MODE_OUTPUT);
+    gpio_set_level(XTEINK_C3_GPIO13, 1);
+    gpio_hold_en(XTEINK_C3_GPIO13);
+  }
+#endif
+
   for (const int8_t pin : {BoardConfig::ACTIVE.power.latch0, BoardConfig::ACTIVE.power.latch1}) {
     if (pin < 0 || BoardConfig::latchConflictsWithBus(pin)) continue;
     const auto latch = static_cast<gpio_num_t>(pin);
@@ -241,9 +263,6 @@ void HalPowerManager::startTimedDeepSleep(HalGPIO& gpio, const uint64_t seconds)
     gpio_set_level(latch, 1);
     gpio_hold_en(latch);
   }
-
-  // Cut gated peripheral rails (touch/SD/EPD) and hold enables off through deep sleep.
-  freeink::PowerManager::powerDownRailsForSleep();
 
   // Isolate GPIOs before sleeping, then restore and arm wake sources
   esp_sleep_config_gpio_isolate();
