@@ -508,10 +508,9 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   // Short power button action behaviour
   uint8_t shortPwrBtn = IGNORE;
   // Long power button action behaviour
-  uint8_t longPwrBtn = SLEEP;
-  // Power + Up shortcut action. Disabled by default so the established
-  // Power + Down screenshot chord remains screenshot-only.
-  uint8_t powerChordAction = CHORD_DISABLED;
+  uint8_t longPwrBtn = READING_STATS;
+  // Power + Up shortcut action. Defaults to Footnotes shortcut.
+  uint8_t powerChordAction = CHORD_FOOTNOTES;
   // Up + Down shortcut action. On touch hardware, while the reader touchscreen
   // is disabled, this chord instead opens Settings as the recovery route.
   uint8_t sideButtonChordAction = CHORD_DISABLED;
@@ -582,7 +581,7 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   // Hide battery percentage
   uint8_t hideBatteryPercentage = HIDE_NEVER;
   // Long-press page turn button behavior
-  uint8_t longPressButtonBehavior = OFF;
+  uint8_t longPressButtonBehavior = FONT_SIZE_CHANGE;
   // UI Theme
   uint8_t uiTheme = LYRA;
   // Recent Books screen layout
@@ -625,14 +624,15 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   uint8_t readingIdleTimeThresholdUnits = 30;
   // Image rendering mode in EPUB reader
   uint8_t imageRendering = IMAGES_DISPLAY;
-  // Long-press Confirm (menu button) quick action in reader (0 = off)
-  uint8_t longPressMenuAction = LONG_MENU_OFF;
-  // Long-press Back quick action in reader (defaults to the historical file browser shortcut)
-  uint8_t longPressBackAction = LONG_MENU_FILE_BROWSER;
-  // Five reusable reader commands and their single owning shortcut. Keep these
-  // adjacent so old settings files simply retain their default-initialized tail.
-  uint8_t quickActionSlots[5] = {IGNORE, IGNORE, IGNORE, IGNORE, IGNORE};
-  uint8_t quickActionsTrigger = 0;
+  // Long-press Confirm (menu button) quick action in reader (defaults to Look Up Word)
+  uint8_t longPressMenuAction = LONG_MENU_LOOKUP_WORD;
+  // Long-press Back quick action in reader (defaults to Quick Actions)
+  uint8_t longPressBackAction = LONG_MENU_QUICK_ACTIONS;
+  // Five reusable reader commands and their single owning shortcut.
+  // Defaults: Toggle Bookmark, Change Font, Focus Reading, Take Screenshot, Create Clipping
+  uint8_t quickActionSlots[5] = {TOGGLE_BOOKMARK, TOGGLE_FONT, TOGGLE_FOCUS_READING, SCREENSHOT, CREATE_CLIPPING};
+  // Default trigger: Long-Press Back (value 3 = QuickActions::Trigger::LongBack)
+  uint8_t quickActionsTrigger = 3;
   // Tilt-based page turning on devices with a supported IMU (X3 and Sticky).
   uint8_t tiltPageTurn = TILT_OFF;
   uint8_t tiltPageTurnDirection = TILT_LEFT_RIGHT;
