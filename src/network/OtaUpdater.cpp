@@ -358,17 +358,33 @@ OtaUpdater::OtaUpdaterError OtaUpdater::checkForUpdate() {
 }
 
 bool OtaUpdater::isUpdateNewer() const {
-  if (!updateAvailable || latestVersion.empty() || latestVersion == CROSSINK_VERSION) {
+  if (!updateAvailable || latestVersion.empty()) {
     return false;
   }
 
-  const int comparison = compareVersions(latestVersion.c_str(), CROSSINK_VERSION);
-  LOG_DBG("OTA", "Version comparison latest=%s current=%s result=%d", latestVersion.c_str(), CROSSINK_VERSION,
-          comparison);
-  // If version numbers are higher, it's definitely an update.
-  // If semver/calver is equal or unparseable but strings differ, also offer the update so
-  // new releases (e.g. rebuilds with different tags or suffixes) can be flashed.
-  return comparison >= 0 || (comparison == 0 && latestVersion != CROSSINK_VERSION);
+  const char* latestStr = latestVersion.c_str();
+  if (latestStr[0] == 'v' || latestStr[0] == 'V') ++latestStr;
+
+  const char* currentStr = CROSSINK_VERSION;
+  if (currentStr[0] == 'v' || currentStr[0] == 'V') ++currentStr;
+
+  if (strcmp(latestStr, currentStr) == 0) {
+    return false;
+  }
+
+  const ParsedVersion parsedLatest = parseVersion(latestVersion.c_str());
+  const ParsedVersion parsedCurrent = parseVersion(CROSSINK_VERSION);
+
+  if (parsedLatest.valid && parsedCurrent.valid) {
+    const int comparison = compareVersions(latestVersion.c_str(), CROSSINK_VERSION);
+    LOG_DBG("OTA", "Version comparison latest=%s current=%s result=%d", latestVersion.c_str(), CROSSINK_VERSION,
+            comparison);
+    // If parsed versions match numerically (e.g. same release numbers), it is not a newer update
+    return comparison > 0;
+  }
+
+  // Fallback for unparseable versions: if string without leading 'v' differs, offer update
+  return strcmp(latestStr, currentStr) != 0;
 }
 
 const std::string& OtaUpdater::getLatestVersion() const { return latestVersion; }
