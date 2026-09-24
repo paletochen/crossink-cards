@@ -707,3 +707,5 @@ STR_LONG_PRESS_BACK: "Pulsación larga del botón Atrás"
 STR_LONG_PRESS_MENU_SHORTCUT: "Pulsación larga del menú"
 STR_CUSTOM_BOOTSCREEN: "Pantalla de inicio propia"
 STR_TAP_HIDE_STATUS_BAR: "Tocar para ocultar el estado"
+STR_SD_CARD_LOGGING: "Registro en tarjeta SD"
+

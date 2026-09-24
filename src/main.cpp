@@ -1364,12 +1364,12 @@ void setup() {
   setSdLogDumpHook([](const char* path, const char* content) -> bool {
     return Storage.appendFile(path, content);
   });
-  dumpLogsToSdCard();
-
   HalSystem::checkPanic();
 
   SETTINGS.loadFromFile();
+  setSdCardLoggingEnabled(SETTINGS.sdCardLogging != 0);
   Storage.installDateTimeCallback(&SETTINGS.clockUtcOffsetQ);
+  dumpLogsToSdCard();
   APP_STATE.loadFromFile();
   mirrorWakeShortPressToNvs();
   // Needs SETTINGS for the clock's UTC offset, so it cannot run any earlier.
