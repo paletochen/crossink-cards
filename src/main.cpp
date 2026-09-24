@@ -1078,6 +1078,7 @@ void enterDashboardSleep(uint32_t seconds) {
 
   halTiltSensor.deepSleep();
   display.deepSleep();
+  dumpLogsToSdCard();
   Storage.shutdown();
   LOG_DBG("MAIN", "Entering timed deep sleep (%u s)", (unsigned)seconds);
 
@@ -1360,6 +1361,10 @@ void setup() {
     return;
   }
   logBootHeap("storage ready");
+  setSdLogDumpHook([](const char* path, const char* content) -> bool {
+    return Storage.appendFile(path, content);
+  });
+  dumpLogsToSdCard();
 
   HalSystem::checkPanic();
 
@@ -1439,8 +1444,12 @@ void setup() {
                           Storage.exists(APP_STATE.favoriteBootImagePath.c_str());
   }
   uint8_t dashboardResume = CrossPointState::DASHBOARD_NONE;
+  // A card cycling through timed sleep records its slot in APP_STATE. Leaving
+  // the mode requires a genuine physical power button press, a flash, or USB power arriving.
+  // If waking from timer (or a glitch on GPIO9 while timer wake is pending), keep card cycling.
+  const bool physicalPowerPressed = gpio.isPressed(HalGPIO::BTN_POWER);
   const bool userEndedCardMode =
-      (wakeupReason == HalGPIO::WakeupReason::PowerButton && wakeHoldVerified && !isTimerWake) ||
+      (!isTimerWake && wakeupReason == HalGPIO::WakeupReason::PowerButton && physicalPowerPressed && wakeHoldVerified) ||
       wakeupReason == HalGPIO::WakeupReason::AfterFlash || wakeupReason == HalGPIO::WakeupReason::AfterUSBPower ||
       rebootedFromPanic;
   if (APP_STATE.activeDashboardMode != CrossPointState::DASHBOARD_NONE) {

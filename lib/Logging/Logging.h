@@ -65,6 +65,13 @@ void clearLastLogs();
 // this returns true so getLastLogs() does not dump corrupt data into crash reports.
 bool sanitizeLogHead();
 
+// SD Card logging hook: dump in-memory ring buffer to SD card
+using SdLogDumpHook = bool (*)(const char* path, const char* content);
+void setSdLogDumpHook(SdLogDumpHook hook);
+void dumpLogsToSdCard(const char* logPath = "/crossink.log");
+void setSdCardLoggingEnabled(bool enabled);
+bool isSdCardLoggingEnabled();
+
 class MySerialImpl : public Print {
  public:
   void begin(unsigned long baud) { logSerial.begin(baud); }

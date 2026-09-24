@@ -33,7 +33,7 @@ jobs:
           pip install --upgrade pip
           pip install platformio
 
-      - name: Build Firmware (Default: X3/X4)
+      - name: "Build Firmware (Default: X3/X4)"
         run: |
           pio run -e default
 

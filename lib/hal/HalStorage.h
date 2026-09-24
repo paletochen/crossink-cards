@@ -43,6 +43,9 @@ class HalStorage {
   // Write a string to `path` on the SD card. Overwrites existing file.
   // Returns true on success.
   bool writeFile(const char* path, const String& content);
+  // Append a string to `path` on the SD card. Creates file if missing.
+  // Returns true on success.
+  bool appendFile(const char* path, const char* content);
   // Ensure a directory exists, creating it if necessary. Returns true on success.
   bool ensureDirectoryExists(const char* path);
   // Install SdFat timestamp support when an RTC-backed clock is available.

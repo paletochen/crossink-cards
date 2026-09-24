@@ -242,18 +242,13 @@ void HalPowerManager::startTimedDeepSleep(HalGPIO& gpio, const uint64_t seconds)
     gpio_hold_en(latch);
   }
 
-  // Isolate GPIOs before sleeping, then arm wake sources
-  esp_sleep_config_gpio_isolate();
-  gpio_deep_sleep_hold_en();
+  // Cut gated peripheral rails (touch/SD/EPD) and hold enables off through deep sleep.
+  freeink::PowerManager::powerDownRailsForSleep();
 
-#if !SOC_PM_SUPPORT_EXT1_WAKEUP
-  // On chips without EXT1 (such as ESP32-C3), arm power button alongside timer so user can wake
-  const int8_t powerPin = BoardConfig::ACTIVE.input.power;
-  if (powerPin >= 0) {
-    pinMode(powerPin, INPUT_PULLUP);
-    esp_deep_sleep_enable_gpio_wakeup(1ULL << powerPin, ESP_GPIO_WAKEUP_GPIO_LOW);
-  }
-#endif
+  // Isolate GPIOs before sleeping, then restore and arm wake sources
+  esp_sleep_config_gpio_isolate();
+  freeink::PowerManager::armPowerButtonWakeup();
+  gpio_deep_sleep_hold_en();
 
   esp_sleep_enable_timer_wakeup(seconds * 1000000ULL);
   esp_deep_sleep_start();

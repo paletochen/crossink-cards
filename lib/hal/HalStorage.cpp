@@ -250,6 +250,16 @@ bool HalStorage::writeFile(const char* path, const String& content) {
   HAL_STORAGE_WRAPPED_CALL(writeFile, path, content);
 }
 
+bool HalStorage::appendFile(const char* path, const char* content) {
+  if (!content || !path) return false;
+  HalFile file = open(path, O_RDWR | O_CREAT | O_APPEND);
+  if (!file) return false;
+  const size_t len = strlen(content);
+  const size_t written = file.write(content, len);
+  file.close();
+  return written == len;
+}
+
 bool HalStorage::ensureDirectoryExists(const char* path) { HAL_STORAGE_WRAPPED_CALL(ensureDirectoryExists, path); }
 
 void HalStorage::installDateTimeCallback(const uint8_t* utcOffsetQuarterHoursBiased) {

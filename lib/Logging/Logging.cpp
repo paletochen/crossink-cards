@@ -124,3 +124,25 @@ void clearLastLogs() {
   logHead = 0;
   rtcLogMagic = LOG_RTC_MAGIC;
 }
+
+static bool s_sdLoggingEnabled = true;
+static SdLogDumpHook s_sdLogDumpHook = nullptr;
+
+void setSdLogDumpHook(SdLogDumpHook hook) {
+  s_sdLogDumpHook = hook;
+}
+
+void setSdCardLoggingEnabled(bool enabled) {
+  s_sdLoggingEnabled = enabled;
+}
+
+bool isSdCardLoggingEnabled() {
+  return s_sdLoggingEnabled;
+}
+
+void dumpLogsToSdCard(const char* logPath) {
+  if (!logPath || !s_sdLoggingEnabled || !s_sdLogDumpHook) return;
+  std::string logs = getLastLogs();
+  if (logs.empty()) return;
+  s_sdLogDumpHook(logPath, logs.c_str());
+}
