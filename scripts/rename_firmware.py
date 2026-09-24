@@ -138,6 +138,10 @@ def rename_firmware(source, target, env):
     default_dst = os.path.join(build_dir, f'firmware-{device_type}.bin')
     _copy_artifact(src, default_dst)
 
+    # Relatable firmware name for crossink-cards
+    crossink_cards_dst = os.path.join(build_dir, f'crossink-cards_v1.6.0_firmware.bin')
+    _copy_artifact(src, crossink_cards_dst)
+
     if _is_rc_artifact_build(env):
         rc_dst = os.path.join(build_dir, _get_rc_artifact_name(project_dir, env))
         _copy_artifact(src, rc_dst)

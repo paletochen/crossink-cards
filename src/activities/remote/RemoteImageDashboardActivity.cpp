@@ -96,7 +96,7 @@ void RemoteImageDashboardActivity::onEnter() {
     return;
   }
 
-  if (!RemoteImageValidation::isHttpsUrl(dashboardUrl())) {
+  if (!RemoteImageValidation::isValidUrl(dashboardUrl())) {
     state = State::Failed;
     errorMessage = tr(STR_REMOTE_IMAGE_HTTPS_REQUIRED);
     requestUpdate();
@@ -138,7 +138,7 @@ void RemoteImageDashboardActivity::promptUrl() {
                              finish();
                              return;
                            }
-                           if (!RemoteImageValidation::isHttpsUrl(kb.text)) {
+                           if (!RemoteImageValidation::isValidUrl(kb.text)) {
                              state = State::Failed;
                              errorMessage = tr(STR_REMOTE_IMAGE_HTTPS_REQUIRED);
                              requestUpdate();
@@ -482,6 +482,9 @@ HttpDownloader::DownloadError RemoteImageDashboardActivity::downloadDashboardIma
     options.outHttpStatus = &lastHttpStatus;
     options.outBytesReceived = &lastBytesReceived;
     options.outExpectedBytes = &lastExpectedBytes;
+#if defined(FREEINK_NET_WOLFSSL)
+    options.transport = HttpDownloader::Transport::WOLFSSL;
+#endif
     return HttpDownloader::downloadToFile(dashboardUrl(), tempPath(), options);
   };
 

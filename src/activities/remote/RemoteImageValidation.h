@@ -29,6 +29,7 @@ struct BmpInfo {
   uint64_t requiredFileSize = 0;
 };
 
+bool isValidUrl(std::string_view url);
 bool isHttpsUrl(std::string_view url);
 BmpError validateBmp(const uint8_t* header, size_t headerSize, uint64_t fileSize, BmpInfo* info = nullptr);
 const char* errorToString(BmpError error);

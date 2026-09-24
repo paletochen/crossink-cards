@@ -964,17 +964,17 @@ inline const std::vector<SettingInfo>& getBaseSettingsList() {
 
     // --- Lock-screen cards ---
     add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_1, &CrossPointSettings::lockScreenCard1RefreshMinutes,
-                           {1, 240, 1}, "lockScreenCard1RefreshMinutes", StrId::STR_CAT_SYSTEM));
+                           {1, 240, 1}, "lockScreenCard1RefreshMinutes", StrId::STR_CAT_DISPLAY));
     add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_2, &CrossPointSettings::lockScreenCard2RefreshMinutes,
-                           {1, 240, 1}, "lockScreenCard2RefreshMinutes", StrId::STR_CAT_SYSTEM));
+                           {1, 240, 1}, "lockScreenCard2RefreshMinutes", StrId::STR_CAT_DISPLAY));
     add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_3, &CrossPointSettings::lockScreenCard3RefreshMinutes,
-                           {1, 240, 1}, "lockScreenCard3RefreshMinutes", StrId::STR_CAT_SYSTEM));
+                           {1, 240, 1}, "lockScreenCard3RefreshMinutes", StrId::STR_CAT_DISPLAY));
     add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_4, &CrossPointSettings::lockScreenCard4RefreshMinutes,
-                           {1, 240, 1}, "lockScreenCard4RefreshMinutes", StrId::STR_CAT_SYSTEM));
+                           {1, 240, 1}, "lockScreenCard4RefreshMinutes", StrId::STR_CAT_DISPLAY));
     add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_5, &CrossPointSettings::lockScreenCard5RefreshMinutes,
-                           {1, 240, 1}, "lockScreenCard5RefreshMinutes", StrId::STR_CAT_SYSTEM));
+                           {1, 240, 1}, "lockScreenCard5RefreshMinutes", StrId::STR_CAT_DISPLAY));
     add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_6, &CrossPointSettings::lockScreenCard6RefreshMinutes,
-                           {1, 240, 1}, "lockScreenCard6RefreshMinutes", StrId::STR_CAT_SYSTEM));
+                           {1, 240, 1}, "lockScreenCard6RefreshMinutes", StrId::STR_CAT_DISPLAY));
     add(SettingInfo::String(StrId::STR_LOCK_SCREEN_CARD_1, SETTINGS.lockScreenCardUrl[0],
                             CrossPointSettings::LOCK_SCREEN_CARD_URL_LEN, "lockScreenCard1Url",
                             StrId::STR_LOCK_SCREENS));
@@ -1381,7 +1381,7 @@ inline std::vector<SettingInfo> buildDisplayFrontlightSettingsList(const std::ve
 
 inline std::vector<SettingInfo> buildDisplaySleepSettingsList(const std::vector<SettingInfo>& allSettings) {
   std::vector<SettingInfo> sleepSettings;
-  sleepSettings.reserve(4);
+  sleepSettings.reserve(12);
 
   auto addSleepSetting = [&](StrId nameId, StrId displayNameId) {
     const auto it = std::find_if(allSettings.begin(), allSettings.end(),
@@ -1393,9 +1393,16 @@ inline std::vector<SettingInfo> buildDisplaySleepSettingsList(const std::vector<
   };
 
   addSleepSetting(StrId::STR_SLEEP_SCREEN, StrId::STR_SLEEP_SCREEN_WALLPAPER);
+  addSleepSetting(StrId::STR_LOCK_SCREEN_TYPE, StrId::STR_LOCK_SCREEN_TYPE);
   addSleepSetting(StrId::STR_SLEEP_COVER_MODE, StrId::STR_SLEEP_COVER_MODE_SHORT);
   addSleepSetting(StrId::STR_SLEEP_COVER_FILTER, StrId::STR_SLEEP_COVER_FILTER_SHORT);
   addSleepSetting(StrId::STR_QUICK_RESUME_TIMEOUT, StrId::STR_QUICK_RESUME_TIMEOUT);
+  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_1, StrId::STR_LOCK_SCREEN_CARD_1);
+  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_2, StrId::STR_LOCK_SCREEN_CARD_2);
+  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_3, StrId::STR_LOCK_SCREEN_CARD_3);
+  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_4, StrId::STR_LOCK_SCREEN_CARD_4);
+  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_5, StrId::STR_LOCK_SCREEN_CARD_5);
+  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_6, StrId::STR_LOCK_SCREEN_CARD_6);
 
   return sleepSettings;
 }

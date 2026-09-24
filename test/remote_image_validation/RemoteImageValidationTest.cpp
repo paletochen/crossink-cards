@@ -40,12 +40,15 @@ uint64_t oneBitFileSize(const int32_t width, const int32_t height) {
 
 }  // namespace
 
-TEST(RemoteImageUrl, AcceptsOnlyNonEmptyHttpsUrlsWithoutWhitespace) {
-  EXPECT_TRUE(RemoteImageValidation::isHttpsUrl("https://example.com/dashboard.bmp"));
-  EXPECT_TRUE(RemoteImageValidation::isHttpsUrl("HTTPS://example.com/a.bmp?token=123"));
-  EXPECT_FALSE(RemoteImageValidation::isHttpsUrl("http://example.com/dashboard.bmp"));
-  EXPECT_FALSE(RemoteImageValidation::isHttpsUrl("https://"));
-  EXPECT_FALSE(RemoteImageValidation::isHttpsUrl("https://example.com/bad url.bmp"));
+TEST(RemoteImageUrl, AcceptsOnlyNonEmptyHttpAndHttpsUrlsWithoutWhitespace) {
+  EXPECT_TRUE(RemoteImageValidation::isValidUrl("https://example.com/dashboard.bmp"));
+  EXPECT_TRUE(RemoteImageValidation::isValidUrl("HTTPS://example.com/a.bmp?token=123"));
+  EXPECT_TRUE(RemoteImageValidation::isValidUrl("http://example.com/dashboard.bmp"));
+  EXPECT_TRUE(RemoteImageValidation::isValidUrl("HTTP://192.168.1.50:8080/card.bmp"));
+  EXPECT_FALSE(RemoteImageValidation::isValidUrl("https://"));
+  EXPECT_FALSE(RemoteImageValidation::isValidUrl("http://"));
+  EXPECT_FALSE(RemoteImageValidation::isValidUrl("ftp://example.com/a.bmp"));
+  EXPECT_FALSE(RemoteImageValidation::isValidUrl("https://example.com/bad url.bmp"));
 }
 
 TEST(RemoteImageBmp, AcceptsCompleteX3OneBitDashboard) {

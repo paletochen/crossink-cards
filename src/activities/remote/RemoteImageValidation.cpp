@@ -16,19 +16,36 @@ uint32_t readLe32(const uint8_t* data) {
          (static_cast<uint32_t>(data[2]) << 16) | (static_cast<uint32_t>(data[3]) << 24);
 }
 
-bool hasHttpsPrefix(const std::string_view url) {
-  constexpr std::string_view prefix = "https://";
-  if (url.size() < prefix.size()) return false;
-  for (size_t i = 0; i < prefix.size(); i++) {
-    if (std::tolower(static_cast<unsigned char>(url[i])) != prefix[i]) return false;
+bool hasValidHttpPrefix(const std::string_view url) {
+  constexpr std::string_view httpPrefix = "http://";
+  constexpr std::string_view httpsPrefix = "https://";
+  if (url.size() >= httpsPrefix.size()) {
+    bool isHttps = true;
+    for (size_t i = 0; i < httpsPrefix.size(); i++) {
+      if (std::tolower(static_cast<unsigned char>(url[i])) != httpsPrefix[i]) {
+        isHttps = false;
+        break;
+      }
+    }
+    if (isHttps) return true;
   }
-  return true;
+  if (url.size() >= httpPrefix.size()) {
+    bool isHttp = true;
+    for (size_t i = 0; i < httpPrefix.size(); i++) {
+      if (std::tolower(static_cast<unsigned char>(url[i])) != httpPrefix[i]) {
+        isHttp = false;
+        break;
+      }
+    }
+    if (isHttp) return true;
+  }
+  return false;
 }
 
 }  // namespace
 
-bool isHttpsUrl(const std::string_view url) {
-  if (!hasHttpsPrefix(url)) return false;
+bool isValidUrl(const std::string_view url) {
+  if (!hasValidHttpPrefix(url)) return false;
 
   const size_t hostStart = url.find("//") + 2;
   const size_t hostEnd = url.find_first_of("/?#", hostStart);
@@ -38,6 +55,10 @@ bool isHttpsUrl(const std::string_view url) {
   return std::none_of(url.begin(), url.end(), [](const char c) {
     return std::iscntrl(static_cast<unsigned char>(c)) || std::isspace(static_cast<unsigned char>(c));
   });
+}
+
+bool isHttpsUrl(const std::string_view url) {
+  return isValidUrl(url);
 }
 
 BmpError validateBmp(const uint8_t* header, const size_t headerSize, const uint64_t fileSize, BmpInfo* info) {
