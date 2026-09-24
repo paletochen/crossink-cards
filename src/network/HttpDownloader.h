@@ -34,7 +34,20 @@ class HttpDownloader {
   };
 
   struct DownloadOptions {
-    DownloadOptions() = default;
+    DownloadOptions()
+        : preservePartial(false),
+          resumePartial(false),
+          shouldCancel(nullptr),
+          bufferSize(0),
+          transport(Transport::ESP_HTTP),
+          operationTimeoutMs(60000),
+          overallTimeoutMs(0),
+          bypassCache(false),
+          cancelRequested(nullptr),
+          outHttpStatus(nullptr),
+          outBytesReceived(nullptr),
+          outExpectedBytes(nullptr) {}
+
     explicit DownloadOptions(bool preservePartial, bool resumePartial = false,
                              CancelCallback shouldCancel = nullptr, size_t bufferSize = 0,
                              Transport transport = Transport::ESP_HTTP)
@@ -42,24 +55,31 @@ class HttpDownloader {
           resumePartial(resumePartial),
           shouldCancel(std::move(shouldCancel)),
           bufferSize(bufferSize),
-          transport(transport) {}
+          transport(transport),
+          operationTimeoutMs(60000),
+          overallTimeoutMs(0),
+          bypassCache(false),
+          cancelRequested(nullptr),
+          outHttpStatus(nullptr),
+          outBytesReceived(nullptr),
+          outExpectedBytes(nullptr) {}
 
-    bool preservePartial = false;
-    bool resumePartial = false;
-    CancelCallback shouldCancel = nullptr;
-    size_t bufferSize = 0;
-    Transport transport = Transport::ESP_HTTP;
+    bool preservePartial;
+    bool resumePartial;
+    CancelCallback shouldCancel;
+    size_t bufferSize;
+    Transport transport;
     // Borrowed only for this synchronous request. Basic credentials are sent
     // only to this origin; empty keeps the request URL as the credential origin.
     std::string_view authorizationOrigin;
 
-    uint32_t operationTimeoutMs = 60000;
-    uint32_t overallTimeoutMs = 0;
-    bool bypassCache = false;
-    CancelCallback cancelRequested = nullptr;
-    int* outHttpStatus = nullptr;
-    size_t* outBytesReceived = nullptr;
-    size_t* outExpectedBytes = nullptr;
+    uint32_t operationTimeoutMs;
+    uint32_t overallTimeoutMs;
+    bool bypassCache;
+    CancelCallback cancelRequested;
+    int* outHttpStatus;
+    size_t* outBytesReceived;
+    size_t* outExpectedBytes;
   };
 
   /**

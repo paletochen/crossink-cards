@@ -960,6 +960,8 @@ inline const std::vector<SettingInfo>& getBaseSettingsList() {
           removeEnumRawValue(setting, static_cast<uint8_t>(CrossPointSettings::LONG_MENU_TOGGLE_TILT_PAGE_TURN));
         }
       }
+    }
+
     // --- Lock-screen cards ---
     add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_1, &CrossPointSettings::lockScreenCard1RefreshMinutes,
                            {1, 240, 1}, "lockScreenCard1RefreshMinutes", StrId::STR_CAT_SYSTEM));
