@@ -13,6 +13,7 @@ class LockScreensActivity final : public Activity {
   int selectorIndex = 0;
 
   static constexpr int ITEM_COUNT = CrossPointSettings::LOCK_SCREEN_CARD_COUNT;
+  mutable std::string labelCache[ITEM_COUNT];
 
   // Menu label for a slot: the card name derived from its URL, or a prompt to
   // set one when the slot is still empty.

@@ -39,6 +39,7 @@ class CrossPointState : public PersistableStore<CrossPointState> {
   enum : uint8_t {
     DASHBOARD_NONE = 0,
     DASHBOARD_CARD_BASE = 1,
+    DASHBOARD_CARD_END = 7,
   };
   uint8_t activeDashboardMode = DASHBOARD_NONE;
   bool showBootScreen = true;

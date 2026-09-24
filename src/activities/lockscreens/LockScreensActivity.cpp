@@ -68,12 +68,17 @@ void LockScreensActivity::render(RenderLock&&) {
   renderer.clearScreen();
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, tr(STR_LOCK_SCREENS));
 
+  for (int i = 0; i < ITEM_COUNT; ++i) {
+    labelCache[i] = itemLabel(i);
+  }
+
   GUI.drawButtonMenu(
       renderer,
       Rect{0, metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing, pageWidth,
            pageHeight -
                (metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing + metrics.buttonHintsHeight)},
-      ITEM_COUNT, selectorIndex, [this](int index) { return itemLabel(index); }, [](int) { return UIIcon::Image; });
+      ITEM_COUNT, selectorIndex, [this](int index) { return labelCache[index].c_str(); },
+      [](int) { return UIIcon::Image; });
 
   const auto labels = mappedInput.mapLabels(tr(STR_BACK), tr(STR_SELECT), tr(STR_DIR_UP), tr(STR_DIR_DOWN));
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
