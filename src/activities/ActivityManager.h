@@ -110,7 +110,7 @@ class ActivityManager {
   // goTo... functions are convenient wrapper for replaceActivity()
   void goToLockScreens();
   void goToLockScreenCard(uint8_t slot);
-  void goToLockScreenDashboard();
+  void goToLockScreenDashboard(uint8_t slot = 0xFF);
   void goToFileTransfer(std::string returnBookPath = {});
   void goToCalibreWireless(const std::string& returnBookPath = {});
   void goToJoinNetworkFileTransfer(const std::string& returnBookPath = {});

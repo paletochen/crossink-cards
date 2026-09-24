@@ -582,8 +582,9 @@ void ActivityManager::goToLockScreenCard(const uint8_t slot) {
 
 // The sleep-screen card runs unattended: it fetches, paints, then arms its own
 // timed deep sleep rather than handing back to the sleep activity.
-void ActivityManager::goToLockScreenDashboard() {
-  replaceActivity(std::make_unique<RemoteImageDashboardActivity>(renderer, mappedInput, SETTINGS.sleepLockScreenCard,
+void ActivityManager::goToLockScreenDashboard(const uint8_t slot) {
+  const uint8_t targetSlot = (slot < CrossPointSettings::LOCK_SCREEN_CARD_COUNT) ? slot : SETTINGS.sleepLockScreenCard;
+  replaceActivity(std::make_unique<RemoteImageDashboardActivity>(renderer, mappedInput, targetSlot,
                                                                  /*autoRefresh=*/true));
 }
 

@@ -175,6 +175,49 @@ bool HalClock::getDate(uint16_t& year, uint8_t& month, uint8_t& day, uint8_t& ho
   return true;
 }
 
+uint32_t HalClock::getSecondsToNextInterval(uint32_t intervalMinutes) const {
+  if (intervalMinutes == 0) return 60;
+
+  if (_available) {
+    Rtc::DateTime dt;
+    if (_sdkRtc.now(dt)) {
+      if (intervalMinutes < 60) {
+        // Aligned to minutes within the hour (:00, :05, :10, :15, etc.)
+        const uint32_t currentMinute = dt.minute;
+        const uint32_t currentSecond = dt.second;
+        uint32_t minutesRemaining = intervalMinutes - (currentMinute % intervalMinutes);
+        if (minutesRemaining == 0) minutesRemaining = intervalMinutes;
+
+        int32_t secondsToBoundary = static_cast<int32_t>(minutesRemaining * 60) - static_cast<int32_t>(currentSecond);
+        // If we are within 2 seconds of boundary, aim for next interval so we don't wake immediately
+        if (secondsToBoundary <= 2) {
+          secondsToBoundary += intervalMinutes * 60;
+        }
+        return static_cast<uint32_t>(secondsToBoundary);
+      } else {
+        // Interval >= 60 minutes (aligned to hour boundaries :00)
+        const uint32_t intervalHours = intervalMinutes / 60;
+        const uint32_t currentHour = dt.hour;
+        const uint32_t currentMinute = dt.minute;
+        const uint32_t currentSecond = dt.second;
+
+        uint32_t hoursRemaining = intervalHours - (currentHour % intervalHours);
+        if (hoursRemaining == 0) hoursRemaining = intervalHours;
+
+        int32_t totalSecRemaining = static_cast<int32_t>(hoursRemaining * 3600) -
+                                    static_cast<int32_t>(currentMinute * 60 + currentSecond);
+        if (totalSecRemaining <= 2) {
+          totalSecRemaining += intervalHours * 3600;
+        }
+        return static_cast<uint32_t>(totalSecRemaining);
+      }
+    }
+  }
+
+  // Fallback if RTC unavailable: standard relative duration
+  return intervalMinutes * 60;
+}
+
 bool HalClock::formatDate(char* buf, size_t bufSize, uint8_t utcOffsetQuarterHoursBiased, const DateFormat dateFormat,
                           const char numericSeparator) const {
   if (bufSize < 13u) return false;

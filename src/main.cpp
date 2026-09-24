@@ -1542,7 +1542,7 @@ void setup() {
     // If we rebooted from a panic, go to crash report screen to show the panic info
     activityManager.goToCrashReport();
   } else if (dashboardResumeActive) {
-    activityManager.goToLockScreenDashboard();
+    activityManager.goToLockScreenDashboard(dashboardResume - CrossPointState::DASHBOARD_CARD_BASE);
   } else if (resume == BootResume::Network) {
     bool launched = false;
     switch (static_cast<NetworkBootTarget>(snapshotTarget)) {

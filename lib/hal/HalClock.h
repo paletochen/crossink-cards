@@ -57,6 +57,10 @@ class HalClock {
     return getDate(year, month, day, hour, minute);
   }
 
+  // Calculates seconds to the next wall-clock aligned interval boundary (e.g. :00, :15, :30, :45 for 15m;
+  // :00, :05, :10 for 5m). Falls back to intervalMinutes * 60 if RTC is not available.
+  uint32_t getSecondsToNextInterval(uint32_t intervalMinutes) const;
+
   // Format date into a caller-provided buffer using the requested display format.
   // utcOffsetQuarterHoursBiased matches formatTime so the date rolls over at local midnight.
   // Returns false if RTC is not available or the RTC date is invalid.

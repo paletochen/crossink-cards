@@ -4,6 +4,7 @@
 #include <Bitmap.h>
 #include <BoardConfig.h>
 #include <GfxRenderer.h>
+#include <HalClock.h>
 #include <HalGPIO.h>
 #include <HalStorage.h>
 #include <I18n.h>
@@ -605,12 +606,11 @@ void RemoteImageDashboardActivity::goToSleepAndPoll() {
 
   APP_STATE.activeDashboardMode = activeDashboardMode();
   APP_STATE.saveToFile();
-  const uint32_t intervalS = refreshMinutes() * 60u;
-  const uint32_t intervalMs = intervalS * 1000u;
+  const uint32_t intervalM = refreshMinutes();
+  const uint32_t sleepS = halClock.getSecondsToNextInterval(intervalM);
   const uint32_t cycleElapsedMs = millis() - cycleStartMs;
-  const uint32_t sleepMs = intervalMs == 0 ? 1000u : intervalMs - (cycleElapsedMs % intervalMs);
-  const uint32_t sleepS = std::max<uint32_t>(1u, (sleepMs + 999u) / 1000u);
-  LOG_INF("REMOTE", "Dashboard armed after %lu ms, sleeping for %u s", cycleElapsedMs, static_cast<unsigned>(sleepS));
+  LOG_INF("REMOTE", "Dashboard armed after %lu ms, clock-aligned sleep for %u s (interval %u min)",
+          cycleElapsedMs, static_cast<unsigned>(sleepS), static_cast<unsigned>(intervalM));
   enterDashboardSleep(sleepS);
 }
 
