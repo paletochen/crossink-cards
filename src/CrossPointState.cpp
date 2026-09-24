@@ -104,6 +104,10 @@ void CrossPointState::toJson(JsonDocument& doc) const {
   doc["recentBootFill"] = recentBootFill;
   doc["readerActivityLoadCount"] = readerActivityLoadCount;
   doc["lastSleepFromReader"] = lastSleepFromReader;
+  // A cycling card arms its wake with a deep sleep, and that wake is a chip
+  // reset: without this the mode is gone by the time boot looks for it, and
+  // the device lands on the home screen instead of the card.
+  doc["activeDashboardMode"] = activeDashboardMode;
   doc["pendingBookmarkSpine"] = pendingBookmarkSpine;
   doc["pendingBookmarkProgress"] = pendingBookmarkProgress;
   doc["pendingBookmarkParagraphIndex"] = pendingBookmarkParagraphIndex;
@@ -157,6 +161,10 @@ bool CrossPointState::fromJson(JsonVariantConst doc) {
   recentBootFill = static_cast<uint8_t>(std::min(static_cast<int>(recentBootFill), actualBootCount));
   readerActivityLoadCount = doc["readerActivityLoadCount"] | static_cast<uint8_t>(0);
   lastSleepFromReader = doc["lastSleepFromReader"] | false;
+  activeDashboardMode = doc["activeDashboardMode"] | static_cast<uint8_t>(DASHBOARD_NONE);
+  // A slot removed since the file was written must not keep the device
+  // cycling a card that no longer exists.
+  if (activeDashboardMode >= DASHBOARD_CARD_END) activeDashboardMode = DASHBOARD_NONE;
   pendingBookmarkSpine = doc["pendingBookmarkSpine"] | static_cast<uint16_t>(UINT16_MAX);
   pendingBookmarkProgress = doc["pendingBookmarkProgress"] | static_cast<float>(-1.0f);
   pendingBookmarkParagraphIndex = doc["pendingBookmarkParagraphIndex"] | static_cast<uint16_t>(UINT16_MAX);
