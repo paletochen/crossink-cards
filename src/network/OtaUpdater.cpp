@@ -42,14 +42,14 @@ constexpr char firmwareAssetName[] = "firmware.bin";
 #endif
 
 constexpr char binSuffix[] = ".bin";
-constexpr size_t VERSION_SEGMENT_COUNT = 4;
+constexpr size_t VERSION_SEGMENT_COUNT = 5;
 constexpr size_t OTA_PROGRESS_UPDATE_BYTES = 64 * 1024;
 constexpr size_t OTA_HASH_CHUNK = 4096;
 constexpr char OTA_STAGE_DIR[] = "/.crosspoint";
 constexpr char OTA_STAGE_PATH[] = "/.crosspoint/ota-update.bin";
 
 struct ParsedVersion {
-  int segments[VERSION_SEGMENT_COUNT] = {0, 0, 0, 0};
+  int segments[VERSION_SEGMENT_COUNT] = {0, 0, 0, 0, 0};
   bool valid = false;
   bool releaseCandidate = false;
 };
