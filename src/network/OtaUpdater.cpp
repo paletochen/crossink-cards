@@ -28,7 +28,7 @@ OtaUpdater::OtaUpdaterError OtaUpdater::installUpdate(ProgressCallback, void*, s
 
 namespace {
 #ifndef CROSSINK_OTA_RELEASE_URL
-#define CROSSINK_OTA_RELEASE_URL "https://api.github.com/repos/uxjulia/CrossInk/releases/latest"
+#define CROSSINK_OTA_RELEASE_URL "https://api.github.com/repos/paletochen/crossink-cards/releases/latest"
 #endif
 
 constexpr char latestReleaseUrl[] = CROSSINK_OTA_RELEASE_URL;
@@ -91,11 +91,11 @@ ParsedVersion parseVersion(const char* version) {
     parsed.segments[segmentIndex] = value;
     ++segmentIndex;
 
-    if (*p != '.') break;
+    if (*p != '.' && *p != '-' && *p != '_') break;
     ++p;
   }
 
-  parsed.valid = true;
+  parsed.valid = (segmentIndex > 0);
   parsed.releaseCandidate = containsRcMarker(version);
   return parsed;
 }
@@ -160,10 +160,12 @@ bool endsWith(const char* value, const char* suffix) {
 
 bool isMatchingFirmwareAssetName(const char* assetName) {
   if (assetName == nullptr) return false;
+  if (!endsWith(assetName, binSuffix)) return false;
   if (strcmp(assetName, firmwareAssetName) == 0) return true;
-  if (!startsWith(assetName, firmwareAssetStem)) return false;
-  if (assetName[strlen(firmwareAssetStem)] != '-') return false;
-  return endsWith(assetName, binSuffix);
+  if (strcmp(assetName, "firmware.bin") == 0) return true;
+  if (startsWith(assetName, "crossink-cards")) return true;
+  if (startsWith(assetName, firmwareAssetStem) && assetName[strlen(firmwareAssetStem)] == '-') return true;
+  return false;
 }
 
 /*
@@ -363,7 +365,10 @@ bool OtaUpdater::isUpdateNewer() const {
   const int comparison = compareVersions(latestVersion.c_str(), CROSSINK_VERSION);
   LOG_DBG("OTA", "Version comparison latest=%s current=%s result=%d", latestVersion.c_str(), CROSSINK_VERSION,
           comparison);
-  return comparison > 0;
+  // If version numbers are higher, it's definitely an update.
+  // If semver/calver is equal or unparseable but strings differ, also offer the update so
+  // new releases (e.g. rebuilds with different tags or suffixes) can be flashed.
+  return comparison >= 0 || (comparison == 0 && latestVersion != CROSSINK_VERSION);
 }
 
 const std::string& OtaUpdater::getLatestVersion() const { return latestVersion; }
