@@ -229,16 +229,32 @@ void HalPowerManager::startTimedDeepSleep(HalGPIO& gpio, const uint64_t seconds)
   logSerial.end();
 #endif
 
-  // Keep the battery latch MOSFET (GPIO13) HIGH: unlike startDeepSleep(), the
-  // MCU must stay powered (in deep sleep) so the RTC timer can fire on battery.
-  constexpr gpio_num_t GPIO_SPIWP = GPIO_NUM_13;
-  gpio_set_direction(GPIO_SPIWP, GPIO_MODE_OUTPUT);
-  gpio_set_level(GPIO_SPIWP, 1);
+  // Hold every configured power latch HIGH through deep sleep -- GPIO13 on the
+  // C3 Xteink boards included. This differs from startDeepSleep(), which drives
+  // that pin LOW to cut battery power: a timed wake needs the MCU to stay
+  // powered so the RTC can fire on battery.
+  for (const int8_t pin : {BoardConfig::ACTIVE.power.latch0, BoardConfig::ACTIVE.power.latch1}) {
+    if (pin < 0 || BoardConfig::latchConflictsWithBus(pin)) continue;
+    const auto latch = static_cast<gpio_num_t>(pin);
+    gpio_hold_dis(latch);
+    gpio_set_direction(latch, GPIO_MODE_OUTPUT);
+    gpio_set_level(latch, 1);
+    gpio_hold_en(latch);
+  }
+
+  // Isolate GPIOs before sleeping, then arm wake sources
   esp_sleep_config_gpio_isolate();
   gpio_deep_sleep_hold_en();
-  gpio_hold_en(GPIO_SPIWP);
-  pinMode(InputManager::POWER_BUTTON_PIN, INPUT_PULLUP);
-  esp_deep_sleep_enable_gpio_wakeup(1ULL << InputManager::POWER_BUTTON_PIN, ESP_GPIO_WAKEUP_GPIO_LOW);
+
+#if !SOC_PM_SUPPORT_EXT1_WAKEUP
+  // On chips without EXT1 (such as ESP32-C3), arm power button alongside timer so user can wake
+  const int8_t powerPin = BoardConfig::ACTIVE.input.power;
+  if (powerPin >= 0) {
+    pinMode(powerPin, INPUT_PULLUP);
+    esp_deep_sleep_enable_gpio_wakeup(1ULL << powerPin, ESP_GPIO_WAKEUP_GPIO_LOW);
+  }
+#endif
+
   esp_sleep_enable_timer_wakeup(seconds * 1000000ULL);
   esp_deep_sleep_start();
 }

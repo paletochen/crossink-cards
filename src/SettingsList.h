@@ -24,6 +24,27 @@
 #include "util/FontFamilyLabel.h"
 #include "util/FrontlightSchedule.h"
 
+inline SettingInfo buildCardIntervalSetting(StrId nameId, uint8_t CrossPointSettings::* field, const char* key) {
+  SettingInfo s;
+  s.nameId = nameId;
+  s.type = SettingType::ENUM;
+  s.valuePtr = field;
+  s.key = key;
+  s.category = StrId::STR_CAT_DISPLAY;
+  static constexpr uint8_t CARD_REFRESH_MINUTES[] = {1, 2, 5, 10, 15, 30, 60, 120, 240};
+  constexpr size_t count = sizeof(CARD_REFRESH_MINUTES) / sizeof(CARD_REFRESH_MINUTES[0]);
+  s.enumStringValues.reserve(count);
+  s.enumRawValues.reserve(count);
+  for (size_t i = 0; i < count; ++i) {
+    char label[16];
+    snprintf(label, sizeof(label), I18N.get(StrId::STR_SLEEP_TIMER_VALUE_FORMAT),
+             static_cast<unsigned>(CARD_REFRESH_MINUTES[i]));
+    s.enumStringValues.emplace_back(label);
+    s.enumRawValues.push_back(CARD_REFRESH_MINUTES[i]);
+  }
+  return s;
+}
+
 inline std::string fontSizePointLabel(const uint8_t pointSize) { return std::to_string(pointSize) + " pt"; }
 
 inline void appendBuiltinFontSizeOption(SettingInfo& setting, const CrossPointSettings::FONT_SIZE size) {
@@ -556,7 +577,7 @@ inline SettingInfo buildHomeButtonActionSetting(const StrId nameId, uint8_t Cros
 // #1636) so the per-entry SettingInfo cost is paid once. Read-only consumers
 // can use it directly; mutable device UI lists use getSettingsList(), which
 // returns an owned copy and can add SD-card font and dictionary options.
-inline constexpr size_t BASE_SETTINGS_CAPACITY = 102;  // 100 regular entries plus two optional tilt entries.
+inline constexpr size_t BASE_SETTINGS_CAPACITY = 116;  // Regular entries plus cards and tilt entries.
 
 inline const std::vector<SettingInfo>& getBaseSettingsList() {
   static const std::vector<SettingInfo> baseList = [] {
@@ -963,18 +984,18 @@ inline const std::vector<SettingInfo>& getBaseSettingsList() {
     }
 
     // --- Lock-screen cards ---
-    add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_1, &CrossPointSettings::lockScreenCard1RefreshMinutes,
-                           {1, 240, 1}, "lockScreenCard1RefreshMinutes", StrId::STR_CAT_DISPLAY));
-    add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_2, &CrossPointSettings::lockScreenCard2RefreshMinutes,
-                           {1, 240, 1}, "lockScreenCard2RefreshMinutes", StrId::STR_CAT_DISPLAY));
-    add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_3, &CrossPointSettings::lockScreenCard3RefreshMinutes,
-                           {1, 240, 1}, "lockScreenCard3RefreshMinutes", StrId::STR_CAT_DISPLAY));
-    add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_4, &CrossPointSettings::lockScreenCard4RefreshMinutes,
-                           {1, 240, 1}, "lockScreenCard4RefreshMinutes", StrId::STR_CAT_DISPLAY));
-    add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_5, &CrossPointSettings::lockScreenCard5RefreshMinutes,
-                           {1, 240, 1}, "lockScreenCard5RefreshMinutes", StrId::STR_CAT_DISPLAY));
-    add(SettingInfo::Value(StrId::STR_LOCK_SCREEN_CARD_6, &CrossPointSettings::lockScreenCard6RefreshMinutes,
-                           {1, 240, 1}, "lockScreenCard6RefreshMinutes", StrId::STR_CAT_DISPLAY));
+    add(buildCardIntervalSetting(StrId::STR_LOCK_SCREEN_CARD_1_REFRESH,
+                                 &CrossPointSettings::lockScreenCard1RefreshMinutes, "lockScreenCard1RefreshMinutes"));
+    add(buildCardIntervalSetting(StrId::STR_LOCK_SCREEN_CARD_2_REFRESH,
+                                 &CrossPointSettings::lockScreenCard2RefreshMinutes, "lockScreenCard2RefreshMinutes"));
+    add(buildCardIntervalSetting(StrId::STR_LOCK_SCREEN_CARD_3_REFRESH,
+                                 &CrossPointSettings::lockScreenCard3RefreshMinutes, "lockScreenCard3RefreshMinutes"));
+    add(buildCardIntervalSetting(StrId::STR_LOCK_SCREEN_CARD_4_REFRESH,
+                                 &CrossPointSettings::lockScreenCard4RefreshMinutes, "lockScreenCard4RefreshMinutes"));
+    add(buildCardIntervalSetting(StrId::STR_LOCK_SCREEN_CARD_5_REFRESH,
+                                 &CrossPointSettings::lockScreenCard5RefreshMinutes, "lockScreenCard5RefreshMinutes"));
+    add(buildCardIntervalSetting(StrId::STR_LOCK_SCREEN_CARD_6_REFRESH,
+                                 &CrossPointSettings::lockScreenCard6RefreshMinutes, "lockScreenCard6RefreshMinutes"));
     add(SettingInfo::String(StrId::STR_LOCK_SCREEN_CARD_1, SETTINGS.lockScreenCardUrl[0],
                             CrossPointSettings::LOCK_SCREEN_CARD_URL_LEN, "lockScreenCard1Url",
                             StrId::STR_LOCK_SCREENS));
@@ -1397,12 +1418,12 @@ inline std::vector<SettingInfo> buildDisplaySleepSettingsList(const std::vector<
   addSleepSetting(StrId::STR_SLEEP_COVER_MODE, StrId::STR_SLEEP_COVER_MODE_SHORT);
   addSleepSetting(StrId::STR_SLEEP_COVER_FILTER, StrId::STR_SLEEP_COVER_FILTER_SHORT);
   addSleepSetting(StrId::STR_QUICK_RESUME_TIMEOUT, StrId::STR_QUICK_RESUME_TIMEOUT);
-  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_1, StrId::STR_LOCK_SCREEN_CARD_1);
-  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_2, StrId::STR_LOCK_SCREEN_CARD_2);
-  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_3, StrId::STR_LOCK_SCREEN_CARD_3);
-  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_4, StrId::STR_LOCK_SCREEN_CARD_4);
-  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_5, StrId::STR_LOCK_SCREEN_CARD_5);
-  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_6, StrId::STR_LOCK_SCREEN_CARD_6);
+  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_1_REFRESH, StrId::STR_LOCK_SCREEN_CARD_1_REFRESH);
+  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_2_REFRESH, StrId::STR_LOCK_SCREEN_CARD_2_REFRESH);
+  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_3_REFRESH, StrId::STR_LOCK_SCREEN_CARD_3_REFRESH);
+  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_4_REFRESH, StrId::STR_LOCK_SCREEN_CARD_4_REFRESH);
+  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_5_REFRESH, StrId::STR_LOCK_SCREEN_CARD_5_REFRESH);
+  addSleepSetting(StrId::STR_LOCK_SCREEN_CARD_6_REFRESH, StrId::STR_LOCK_SCREEN_CARD_6_REFRESH);
 
   return sleepSettings;
 }

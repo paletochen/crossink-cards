@@ -1293,8 +1293,10 @@ void setup() {
 
   const auto wakeupReason = gpio.getWakeupReason();
 #ifndef SIMULATOR
+  const bool isTimerWake = (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER);
   const bool shortPressWakes = readWakeShortPressFromNvs();
-  if (wakeupReason == HalGPIO::WakeupReason::PowerButton && !gpio.verifyPowerButtonWakeup(shortPressWakes)) {
+  const bool wakeHoldVerified = wakeupReason != HalGPIO::WakeupReason::PowerButton || gpio.verifyPowerButtonWakeup(shortPressWakes);
+  if (!isTimerWake && wakeupReason == HalGPIO::WakeupReason::PowerButton && !wakeHoldVerified) {
     LOG_DBG("MAIN", "Power-button wake not held through verification, sleeping");
     powerManager.startDeepSleep(gpio);
   }
@@ -1437,12 +1439,16 @@ void setup() {
                           Storage.exists(APP_STATE.favoriteBootImagePath.c_str());
   }
   uint8_t dashboardResume = CrossPointState::DASHBOARD_NONE;
+  const bool userEndedCardMode =
+      (wakeupReason == HalGPIO::WakeupReason::PowerButton && wakeHoldVerified && !isTimerWake) ||
+      wakeupReason == HalGPIO::WakeupReason::AfterFlash || wakeupReason == HalGPIO::WakeupReason::AfterUSBPower ||
+      rebootedFromPanic;
   if (APP_STATE.activeDashboardMode != CrossPointState::DASHBOARD_NONE) {
-    if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_TIMER) {
-      LOG_INF("MAIN", "Timer wake: refreshing card %u", APP_STATE.activeDashboardMode);
+    if (isTimerWake || !userEndedCardMode) {
+      LOG_INF("MAIN", "Timed wake: refreshing card %u", APP_STATE.activeDashboardMode);
       dashboardResume = APP_STATE.activeDashboardMode;
     } else {
-      LOG_INF("MAIN", "Non-timer wake: leaving card mode");
+      LOG_INF("MAIN", "User wake: leaving card mode");
       APP_STATE.activeDashboardMode = CrossPointState::DASHBOARD_NONE;
       APP_STATE.saveToFile();
     }
